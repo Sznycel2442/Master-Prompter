@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Prompter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>  
+<div id="setup" style="color: white; font-family: sans-serif;">
+    <h1 style="margin: 0 0 10px 0;">Master Prompter</h1>
+    
+    <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; display: inline-flex; flex-direction: column; gap: 15px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        
+        <div style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
+            <span id="clock" style="color: #007bff; font-weight: bold; font-size: 24px; min-width: 100px;">00:00:00</span>
+            <label style="font-size: 14px;">
+                Scheduled Start: 
+                <input type="time" id="startTime" step="1" style="background: #333; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px; margin-left: 5px;">
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <button class="btn" id="planBtn" onclick="scheduleStart()" style="background: #f39c12; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s;">
+                SCHEDULE
+            </button>
+            <button class="btn btn-fs" onclick="toggleFS()" style="background: #444; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s;">
+                FULLSCREEN
+            </button>
+        </div>
+        
+    </div>
+    
+        <div class="textarea-container">
+            <div class="toolbar">
+                <select id="textAlign" onchange="updateAlign(this.value)">
+                    <option value="center">Center Align</option>
+                    <option value="left">Left Align</option>
+                    <option value="right">Right Align</option>
+                    <option value="justify">Justify</option>
+                </select>
+                <button class="clear-btn" onclick="clearText()">CLEAR TEXT</button>
+            </div>
+            <textarea id="inputText" placeholder="Paste your script here..."></textarea>
+        </div>
+        
+        <div class="config-grid">
+            <div>Font: <input type="number" id="initSize" value="70" style="width:50px"> px</div>
+            <div>Speed: 
+                <input type="number" id="initSpeedNum" value="20" min="0" max="100" style="width:50px" oninput="syncInputs('speed', 'num')">
+                <input type="range" id="initSpeedRange" min="0" max="100" value="20" oninput="syncInputs('speed', 'range')">
+                <button class="btn" style="font-size:10px; padding:5px; background:#ffa600;" onclick="toggleTouchUI()">TOUCH UI</button>
+            </div>
+        </div>
+
+        <button class="btn btn-start" onclick="runPrompter()">START NOW</button>
+    </div>
+
+    <div id="live-controls">
+        <button class="btn" style="background:#555; color:white; font-size:11px;" onclick="toggleMenuLock()" id="lockBtn">MENU: FIXED</button>
+        <button class="btn" style="background:#28a745; color:white" onclick="togglePlay()" id="playBtn">PAUSE</button>
+        <button class="btn" style="background:#444; color:white" onclick="restartText()">RESTART</button>
+        <span>Size: <input type="number" id="liveSize" style="width:55px"></span>
+        <span>Speed: <input type="number" id="liveSpeedNum" style="width:55px"></span>
+        <input type="range" id="liveSpeedRange" min="0" max="100">
+        <select id="liveAlign" onchange="updateAlign(this.value)">
+            <option value="center">Center</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+            <option value="justify">Justify</option>
+        </select>
+        <button class="btn" style="background:#f39c12; color:white" onclick="toggleFlip()">FLIP</button>
+        <button class="btn" style="background:#f39c12; color:white" onclick="toggleRotate()">ROTATE</button> <!-- DODANO PRZYCISK ROTATE -->
+        <button class="btn btn-fs" onclick="toggleFS()">FS</button>
+        <button class="btn" style="background:#dc3545; color:white" onclick="exitToMenu()">ESC</button>
+    </div>
+
+    <div id="touch-controls">
+        <div class="touch-btn" onmousedown="startManualScroll(40)" onmouseup="stopManualScroll()" ontouchstart="startManualScroll(40)" ontouchend="stopManualScroll()">▲</div>
+        <div class="touch-btn" onclick="togglePlay()" id="touchPlayBtn">⏸</div>
+        <div class="touch-btn" onmousedown="startManualScroll(-40)" onmouseup="stopManualScroll()" ontouchstart="startManualScroll(-40)" ontouchend="stopManualScroll()">▼</div>
+        <div class="touch-btn" onclick="restartText()" style="font-size:14px; background:rgba(220,53,69,0.2)">R</div>
+    </div>
+
+    <div id="indicator"></div>
+    <div id="prompter"><div id="text-container"></div></div>
+    
+    <script src="script.js"></script>
+
+</body>
+</html>
