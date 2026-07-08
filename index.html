@@ -10,27 +10,72 @@
 <div id="setup" style="color: white; font-family: sans-serif;">
     <h1 style="margin: 0 0 10px 0;">Master Prompter</h1>
     
-    <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; display: inline-flex; flex-direction: column; gap: 15px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-        
-        <div style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
-            <span id="clock" style="color: #007bff; font-weight: bold; font-size: 24px; min-width: 100px;">00:00:00</span>
-            <label style="font-size: 14px;">
-                Scheduled Start: 
-                <input type="time" id="startTime" step="1" style="background: #333; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px; margin-left: 5px;">
+    <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: stretch;">
+
+        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; display: flex; flex-direction: column; gap: 15px; align-items: center; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 320px; max-width: 90vw; box-sizing: border-box;">
+            <div style="font-weight: bold;">Schedule</div>
+
+            <span id="clock" style="color: #007bff; font-weight: bold; font-size: 24px;">00:00:00</span>
+
+            <label style="font-size: 14px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                Scheduled Start
+                <input type="time" id="startTime" step="1" style="background: #333; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px; width: 100%; box-sizing: border-box; text-align: center;">
             </label>
+
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: auto;">
+                <button class="btn" id="planBtn" onclick="scheduleStart()" style="background: #f39c12; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s;">
+                    SCHEDULE
+                </button>
+                <button class="btn btn-fs" onclick="toggleFS()" style="background: #444; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s;">
+                    FULLSCREEN
+                </button>
+            </div>
         </div>
 
-        <div style="display: flex; gap: 10px; width: 100%;">
-            <button class="btn" id="planBtn" onclick="scheduleStart()" style="background: #f39c12; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s;">
-                SCHEDULE
-            </button>
-            <button class="btn btn-fs" onclick="toggleFS()" style="background: #444; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s;">
-                FULLSCREEN
-            </button>
+        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 320px; max-width: 90vw; box-sizing: border-box;">
+            <div style="font-weight: bold;">Remote Control</div>
+
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <input type="text" id="sessionCode" placeholder="session code" style="flex: 1; background: #333; color: white; border: 1px solid #444; padding: 8px; border-radius: 4px; min-width: 0; text-align: center;">
+                <button class="btn" onclick="randomizeSessionCode()" style="background: #444; color: white;">Randomize</button>
+            </div>
+
+            <button class="btn" id="sessionToggleBtn" onclick="toggleSession()" style="background: #28a745; color: white; width: 100%;">Create Session</button>
+
+            <label style="font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;">
+                <input type="checkbox" id="allowRemoteControl" onchange="onAllowControlChange()">
+                Show control buttons on the shared session
+            </label>
+
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%; margin-top: auto; color: #777; font-size: 12px;">
+                <div style="flex: 1; height: 1px; background: #333;"></div>
+                or join a session
+                <div style="flex: 1; height: 1px; background: #333;"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <input type="text" id="joinCode" placeholder="session code" onkeydown="if(event.key==='Enter') joinSession()" style="flex: 1; background: #333; color: white; border: 1px solid #444; padding: 8px; border-radius: 4px; min-width: 0; text-align: center;">
+                <button class="btn" onclick="joinSession()" style="background: #007bff; color: white;">Join</button>
+            </div>
         </div>
-        
+
+        <div id="sessionInfo" style="display: none; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; flex-direction: column; gap: 12px; align-items: center; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 320px; max-width: 90vw; box-sizing: border-box;">
+            <div style="font-weight: bold;">Session Link</div>
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <input type="text" id="sessionLink" readonly style="flex: 1; background: #333; color: white; border: 1px solid #444; padding: 8px; border-radius: 4px; font-size: 12px; min-width: 0; text-align: center;">
+                <button class="btn" onclick="copySessionLink()" style="background: #007bff; color: white;">Copy</button>
+            </div>
+            <div id="qrcode" ondblclick="openQrFullscreen()" title="Double-click to enlarge" style="background: white; border-radius: 8px; line-height: 0; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box; cursor: zoom-in;"></div>
+            <div id="remotePeersStatus" style="font-size: 12px; color: #aaa;">No devices connected</div>
+        </div>
+
     </div>
-    
+
+    <div id="qrFullscreen" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 200; align-items: center; justify-content: center;">
+        <button class="btn" onclick="closeQrFullscreen()" style="position: absolute; top: 20px; right: 20px; background: #444; color: white;">← Back</button>
+        <div id="qrFullscreenCode" style="background: white; padding: 24px; border-radius: 16px; width: min(80vw, 80vh); height: min(80vw, 80vh); display: flex; align-items: center; justify-content: center; box-sizing: border-box;"></div>
+    </div>
+
         <div class="textarea-container">
             <div class="toolbar">
                 <select id="textAlign" onchange="updateAlign(this.value)">
@@ -82,9 +127,23 @@
         <div class="touch-btn" onclick="restartText()" style="font-size:14px; background:rgba(220,53,69,0.2)">R</div>
     </div>
 
+    <div id="remote-controls">
+        <button class="btn" style="background:#28a745; color:white" onclick="remoteCmd('togglePlay')" id="remotePlayBtn">PAUSE</button>
+        <button class="btn" style="background:#444; color:white" onclick="remoteCmd('restart')">RESTART</button>
+        <div class="touch-btn" style="width:40px; height:40px; font-size:16px;" onmousedown="remoteScrollStart(40)" onmouseup="remoteScrollStop()" onmouseleave="remoteScrollStop()" ontouchstart="remoteScrollStart(40)" ontouchend="remoteScrollStop()">▲</div>
+        <div class="touch-btn" style="width:40px; height:40px; font-size:16px;" onmousedown="remoteScrollStart(-40)" onmouseup="remoteScrollStop()" onmouseleave="remoteScrollStop()" ontouchstart="remoteScrollStart(-40)" ontouchend="remoteScrollStop()">▼</div>
+        <button class="btn" style="background:#f39c12; color:white" onclick="remoteCmd('flip')">FLIP</button>
+        <button class="btn" style="background:#f39c12; color:white" onclick="remoteCmd('rotate')">ROTATE</button>
+        <button class="btn btn-fs" onclick="toggleFS()">FS</button>
+    </div>
+
+    <div id="remoteStatus"></div>
+
     <div id="indicator"></div>
     <div id="prompter"><div id="text-container"></div></div>
-    
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <script src="script.js"></script>
 
 </body>
