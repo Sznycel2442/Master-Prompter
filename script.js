@@ -13,6 +13,7 @@ let remoteControlsAllowed = false;
 
 let remoteConn = null;
 let remoteAnimating = false;
+let remoteTargetPosition = null;
 
 const SESSION_CODE_WORDS = ['tekst', 'mowa', 'kadr', 'film', 'wizja', 'audio', 'wideo', 'oko', 'usta', 'mina', 'gest', 'styl', 'sens', 'znak', 'opis', 'plan', 'ruch', 'czas', 'teza', 'fraza', 'pauza', 'tempo', 'rym', 'rytm', 'proza', 'aktor', 'ekran', 'temat', 'ton', 'scena'];
 
@@ -56,7 +57,7 @@ function startSession() {
         const qr = qrcode(0, 'M');
         qr.addData(link);
         qr.make();
-        qrHolder.innerHTML = qr.createSvgTag(8, 0);
+        qrHolder.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
 
         broadcastInterval = setInterval(sendStateToAll, 150);
     });
@@ -109,6 +110,14 @@ function openQrFullscreen() {
 
 function closeQrFullscreen() {
     document.getElementById('qrFullscreen').style.display = 'none';
+}
+
+function openHelp() {
+    document.getElementById('helpModal').style.display = 'flex';
+}
+
+function closeHelp() {
+    document.getElementById('helpModal').style.display = 'none';
 }
 
 function copySessionLink() {
@@ -233,12 +242,13 @@ function handleHostState(data) {
     prompterDiv.classList.toggle('rotated', data.rotated);
     isPlaying = data.isPlaying;
 
-    if (!remoteAnimating || Math.abs(position - data.position) > 8) position = data.position;
-    container.style.top = position + 'px';
-
     if (!remoteAnimating) {
+        position = data.position;
+        container.style.top = position + 'px';
         remoteAnimating = true;
         animate();
+    } else {
+        remoteTargetPosition = data.position;
     }
 }
 
@@ -338,6 +348,12 @@ function animate() {
     if (isPlaying) {
         const speed = parseFloat(document.getElementById('liveSpeedNum').value) || 0;
         position -= (speed / 20);
+
+        if (remoteConn && remoteTargetPosition !== null) {
+            const diff = remoteTargetPosition - position;
+            position += Math.abs(diff) > 150 ? diff : diff * 0.15;
+        }
+
         container.style.top = position + 'px';
     }
     animationId = requestAnimationFrame(animate);
@@ -404,6 +420,10 @@ window.addEventListener('wheel', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
+    if (e.key === "Escape" && document.getElementById('helpModal').style.display === 'flex') {
+        closeHelp();
+        return;
+    }
     if (e.key === "Escape" && document.getElementById('qrFullscreen').style.display === 'flex') {
         closeQrFullscreen();
         return;
