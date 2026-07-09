@@ -23,7 +23,7 @@ let lastFrameTime = null;
 
 const PX_PER_SPEED_UNIT = 3;
 
-const SESSION_CODE_WORDS = ['tekst', 'mowa', 'kadr', 'film', 'wizja', 'audio', 'wideo', 'oko', 'usta', 'mina', 'gest', 'styl', 'sens', 'znak', 'opis', 'plan', 'ruch', 'czas', 'teza', 'fraza', 'pauza', 'tempo', 'rym', 'rytm', 'proza', 'aktor', 'ekran', 'temat', 'ton', 'scena'];
+const SESSION_CODE_WORDS = ['text', 'speech', 'frame', 'film', 'vision', 'audio', 'video', 'eye', 'mouth', 'face', 'gesture', 'style', 'meaning', 'sign', 'caption', 'plan', 'motion', 'time', 'thesis', 'phrase', 'pause', 'tempo', 'rhyme', 'rhythm', 'prose', 'actor', 'screen', 'topic', 'tone', 'scene'];
 
 function randomSessionWord() {
     return SESSION_CODE_WORDS[Math.floor(Math.random() * SESSION_CODE_WORDS.length)];
