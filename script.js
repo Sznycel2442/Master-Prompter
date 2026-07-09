@@ -13,7 +13,15 @@ let remoteControlsAllowed = false;
 
 let remoteConn = null;
 let remoteAnimating = false;
-let remoteTargetPosition = null;
+let remoteScrollBaseline = window.innerHeight;
+let remoteWasRunning = false;
+let remoteIsPlaying = false;
+let remoteSpeedPxPerSec = 0;
+let remoteLastPosition = null;
+let remoteLastUpdateWallTime = null;
+let lastFrameTime = null;
+
+const PX_PER_SPEED_UNIT = 3;
 
 const SESSION_CODE_WORDS = ['tekst', 'mowa', 'kadr', 'film', 'wizja', 'audio', 'wideo', 'oko', 'usta', 'mina', 'gest', 'styl', 'sens', 'znak', 'opis', 'plan', 'ruch', 'czas', 'teza', 'fraza', 'pauza', 'tempo', 'rym', 'rytm', 'proza', 'aktor', 'ekran', 'temat', 'ton', 'scena'];
 
@@ -59,7 +67,7 @@ function startSession() {
         qr.make();
         qrHolder.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
 
-        broadcastInterval = setInterval(sendStateToAll, 150);
+        broadcastInterval = setInterval(sendStateToAll, 100);
     });
 
     peer.on('connection', (conn) => {
@@ -143,7 +151,8 @@ function getTickState() {
         type: 'tick',
         running: prompterDiv.style.display === 'block',
         isPlaying,
-        position,
+        scrolled: window.innerHeight - position,
+        timestamp: Date.now(),
         fontSize: container.style.fontSize,
         speed: document.getElementById('liveSpeedNum').value,
         align: document.getElementById('liveAlign').value,
@@ -225,6 +234,7 @@ function handleHostState(data) {
     const statusEl = document.getElementById('remoteStatus');
 
     if (!data.running) {
+        remoteWasRunning = false;
         statusEl.style.display = 'block';
         statusEl.innerText = 'Waiting for the prompter to start...';
         prompterDiv.style.display = 'none';
@@ -242,13 +252,26 @@ function handleHostState(data) {
     prompterDiv.classList.toggle('rotated', data.rotated);
     isPlaying = data.isPlaying;
 
+    if (!remoteWasRunning) {
+        remoteScrollBaseline = window.innerHeight;
+        remoteWasRunning = true;
+    }
+
+    remoteIsPlaying = data.isPlaying;
+    remoteSpeedPxPerSec = (parseFloat(data.speed) || 0) * PX_PER_SPEED_UNIT;
+
+    const latencySec = Math.max(0, (Date.now() - data.timestamp) / 1000);
+    let scrolled = data.scrolled;
+    if (remoteIsPlaying) scrolled += remoteSpeedPxPerSec * latencySec;
+
+    remoteLastPosition = remoteScrollBaseline - scrolled;
+    remoteLastUpdateWallTime = performance.now();
+
     if (!remoteAnimating) {
-        position = data.position;
+        position = remoteLastPosition;
         container.style.top = position + 'px';
         remoteAnimating = true;
         animate();
-    } else {
-        remoteTargetPosition = data.position;
     }
 }
 
@@ -344,17 +367,26 @@ function runPrompter() {
     }
 }
 
-function animate() {
-    if (isPlaying) {
-        const speed = parseFloat(document.getElementById('liveSpeedNum').value) || 0;
-        position -= (speed / 20);
-
-        if (remoteConn && remoteTargetPosition !== null) {
-            const diff = remoteTargetPosition - position;
-            position += Math.abs(diff) > 150 ? diff : diff * 0.15;
+function animate(now) {
+    if (remoteConn) {
+        if (remoteLastPosition !== null) {
+            if (remoteIsPlaying && remoteLastUpdateWallTime !== null) {
+                const dt = (performance.now() - remoteLastUpdateWallTime) / 1000;
+                position = remoteLastPosition - remoteSpeedPxPerSec * dt;
+            } else {
+                position = remoteLastPosition;
+            }
+            container.style.top = position + 'px';
         }
-
+    } else if (isPlaying) {
+        if (now === undefined) now = performance.now();
+        const dt = lastFrameTime !== null ? (now - lastFrameTime) / 1000 : 0;
+        lastFrameTime = now;
+        const speed = parseFloat(document.getElementById('liveSpeedNum').value) || 0;
+        position -= speed * PX_PER_SPEED_UNIT * dt;
         container.style.top = position + 'px';
+    } else {
+        lastFrameTime = null;
     }
     animationId = requestAnimationFrame(animate);
 }
